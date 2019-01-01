@@ -90,6 +90,7 @@ AVBufferRef *av_buffer_allocz(int size)
     return ret;
 }
 
+// 增加buf引用计数并直接返回buffer指针
 AVBufferRef *av_buffer_ref(AVBufferRef *buf)
 {
     AVBufferRef *ret = av_mallocz(sizeof(*ret));

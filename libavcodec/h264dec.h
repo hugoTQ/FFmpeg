@@ -129,20 +129,20 @@ typedef struct H264Picture {
     AVFrame *f;
     ThreadFrame tf;
 
-    AVBufferRef *qscale_table_buf;
-    int8_t *qscale_table;
-
-    AVBufferRef *motion_val_buf[2];
-    int16_t (*motion_val[2])[2];
+    AVBufferRef *qscale_table_buf;  //？？
+    int8_t *qscale_table;   /* QP table，每个宏块的一个QP，从左向右宏块标号，
+                            qscale_table[0]第一行第一列宏块QP，qsacle_table[1]第一行第二列宏块QP ，宏块大小16*16*/
+    AVBufferRef *motion_val_buf[2]; //？？
+    int16_t (*motion_val[2])[2];    //mv运动矢量（指针数组数组，2个指针数组，可以看作2*2的二维数组，元素是指针）
 
     AVBufferRef *mb_type_buf;
-    uint32_t *mb_type;
+    uint32_t *mb_type;  // 宏块类型，例如帧内4*4，16*16，帧间16*16，16*8，8*16，8*8等，参见avcodec.h
 
     AVBufferRef *hwaccel_priv_buf;
     void *hwaccel_picture_private; ///< hardware accelerator private data
 
-    AVBufferRef *ref_index_buf[2];
-    int8_t *ref_index[2];
+    AVBufferRef *ref_index_buf[2];  
+    int8_t *ref_index[2];   //运动估计参考帧列表
 
     int field_poc[2];       ///< top/bottom POC
     int poc;                ///< frame POC

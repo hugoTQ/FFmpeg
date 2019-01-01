@@ -223,14 +223,14 @@ typedef struct AVIOContext {
      *               +-------------+----------------------------------------------+
      *
      */
-    unsigned char *buffer;  /**< Start of the buffer. */
-    int buffer_size;        /**< Maximum buffer size */
-    unsigned char *buf_ptr; /**< Current position in the buffer */
-    unsigned char *buf_end; /**< End of the data, may be less than
+    unsigned char *buffer;  /**< Start of the buffer. */    //缓存开始的地方
+    int buffer_size;        /**< Maximum buffer size */ //缓存大小，默认32768
+    unsigned char *buf_ptr; /**< Current position in the buffer */  //当前指针读取到的位置
+    unsigned char *buf_end; /**< End of the data, may be less than  //缓存结束的位置
                                  buffer+buffer_size if the read function returned
                                  less data than requested, e.g. for streams where
                                  no more data has been received yet. */
-    void *opaque;           /**< A private pointer, passed to the read/write/seek/...
+    void *opaque;           /**< A private pointer, passed to the read/write/seek/...//URLContext结构体
                                  functions. */
     int (*read_packet)(void *opaque, uint8_t *buf, int buf_size);
     int (*write_packet)(void *opaque, uint8_t *buf, int buf_size);

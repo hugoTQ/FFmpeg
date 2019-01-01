@@ -1435,16 +1435,16 @@ typedef struct AVPacket {
      * the terms dts and pts/cts to mean something different. Such timestamps
      * must be converted to true pts/dts before they are stored in AVPacket.
      */
-    int64_t pts;
+    int64_t pts;    //显示时间戳
     /**
      * Decompression timestamp in AVStream->time_base units; the time at which
      * the packet is decompressed.
      * Can be AV_NOPTS_VALUE if it is not stored in the file.
      */
-    int64_t dts;
-    uint8_t *data;
-    int   size;
-    int   stream_index;
+    int64_t dts;    //解码时间戳
+    uint8_t *data;  //压缩的编码数据，对于H.264来说。1个AVPacket的data通常对应一个NAL。将data写成文件则是音视频码流数据。
+    int   size; //data 大小
+    int   stream_index; //识别该AVPacket所属的视频/音频流？？？AVPacket不是就包含了音视频吗？
     /**
      * A combination of AV_PKT_FLAG values
      */
@@ -1538,8 +1538,8 @@ typedef struct AVCodecContext {
     const AVClass *av_class;
     int log_level_offset;
 
-    enum AVMediaType codec_type; /* see AVMEDIA_TYPE_xxx */
-    const struct AVCodec  *codec;
+    enum AVMediaType codec_type; /* see AVMEDIA_TYPE_xxx */ //编解码类型，视频/音频。。
+    const struct AVCodec  *codec;   //采用的解码器AVCodec（H.264,MPEG2...）
     enum AVCodecID     codec_id; /* see AV_CODEC_ID_xxx */
 
     /**
@@ -1580,7 +1580,7 @@ typedef struct AVCodecContext {
      * - decoding: Set by user, may be overwritten by libavcodec
      *             if this info is available in the stream
      */
-    int64_t bit_rate;
+    int64_t bit_rate;   //平均比特率
 
     /**
      * number of bits the bitstream is allowed to diverge from the reference.
@@ -1631,7 +1631,7 @@ typedef struct AVCodecContext {
      * - encoding: Set/allocated/freed by libavcodec.
      * - decoding: Set/allocated/freed by user.
      */
-    uint8_t *extradata;
+    uint8_t *extradata; //针对特定编码器包含的附加信息（例如对于H.264解码器来说，存储SPS，PPS等）
     int extradata_size;
 
     /**
@@ -1653,7 +1653,7 @@ typedef struct AVCodecContext {
      * - decoding: the use of this field for decoding is deprecated.
      *             Use framerate instead.
      */
-    AVRational time_base;
+    AVRational time_base;   //根据该参数，可以把PTS转化为实际的时间（单位为秒s），应该与AVFormatContext里的相同？
 
     /**
      * For some codecs, the time base is closer to the field rate than the frame rate.
@@ -1703,7 +1703,7 @@ typedef struct AVCodecContext {
      *             to be set by the caller. During decoding, the decoder may
      *             overwrite those values as required while parsing the data.
      */
-    int width, height;
+    int width, height;  //如果是视频的话，代表宽和高
 
     /**
      * Bitstream width / height, may be different from width/height e.g. when
@@ -2114,7 +2114,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by lavc.
      */
-    int refs;
+    int refs;   //运动估计参考帧的个数（H.264的话会有多帧，MPEG2这类的一般就没有了）
 
 #if FF_API_PRIVATE_OPT
     /** @deprecated use encoder private options instead */
@@ -2186,15 +2186,15 @@ typedef struct AVCodecContext {
     enum AVFieldOrder field_order;
 
     /* audio only */
-    int sample_rate; ///< samples per second
-    int channels;    ///< number of audio channels
+    int sample_rate; ///< samples per second    //采样率（音频）
+    int channels;    ///< number of audio channels  //声道数（音频）
 
     /**
      * audio sample format
      * - encoding: Set by user.
      * - decoding: Set by libavcodec.
      */
-    enum AVSampleFormat sample_fmt;  ///< sample format
+    enum AVSampleFormat sample_fmt;  ///< sample format //采样格式
 
     /* The following data should not be initialized. */
     /**
@@ -2856,7 +2856,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by libavcodec.
      */
-     int profile;
+     int profile;   //档次（H.264中有7中档次：baseline，main，high..）
 #define FF_PROFILE_UNKNOWN -99
 #define FF_PROFILE_RESERVED -100
 
@@ -2966,7 +2966,7 @@ typedef struct AVCodecContext {
      * - encoding: Set by user.
      * - decoding: Set by libavcodec.
      */
-     int level;
+     int level; //水平，对于相同的profile，定义了多个level，h264有17个level，主要是定义兼容性
 #define FF_LEVEL_UNKNOWN -99
 
     /**
@@ -3428,24 +3428,24 @@ typedef struct AVCodec {
      * encoder and a decoder can share the same name).
      * This is the primary way to find a codec from the user perspective.
      */
-    const char *name;
+    const char *name;   //编码器名字, 参加 AVCodec ff_*
     /**
      * Descriptive name for the codec, meant to be more human readable than name.
      * You should use the NULL_IF_CONFIG_SMALL() macro to define it.
      */
-    const char *long_name;
-    enum AVMediaType type;
-    enum AVCodecID id;
+    const char *long_name;  //编解码器的名字，全称，比较长
+    enum AVMediaType type;  //指明了类型，是视频，音频，还是字幕
+    enum AVCodecID id;  //编码器ID
     /**
      * Codec capabilities.
      * see AV_CODEC_CAP_*
      */
     int capabilities;
-    const AVRational *supported_framerates; ///< array of supported framerates, or NULL if any, array is terminated by {0,0}
-    const enum AVPixelFormat *pix_fmts;     ///< array of supported pixel formats, or NULL if unknown, array is terminated by -1
-    const int *supported_samplerates;       ///< array of supported audio samplerates, or NULL if unknown, array is terminated by 0
-    const enum AVSampleFormat *sample_fmts; ///< array of supported sample formats, or NULL if unknown, array is terminated by -1
-    const uint64_t *channel_layouts;         ///< array of support channel layouts, or NULL if unknown. array is terminated by 0
+    const AVRational *supported_framerates; ///< array of supported framerates, or NULL if any, array is terminated by {0,0}    //支持的帧率（仅视频）
+    const enum AVPixelFormat *pix_fmts;     ///< array of supported pixel formats, or NULL if unknown, array is terminated by -1    //支持的像素格式（仅视频）
+    const int *supported_samplerates;       ///< array of supported audio samplerates, or NULL if unknown, array is terminated by 0 //支持的采样率（仅音频）
+    const enum AVSampleFormat *sample_fmts; ///< array of supported sample formats, or NULL if unknown, array is terminated by -1   //支持的采样格式（仅音频）
+    const uint64_t *channel_layouts;         ///< array of support channel layouts, or NULL if unknown. array is terminated by 0    //支持的声道数（仅音频）
     uint8_t max_lowres;                     ///< maximum value for lowres supported by the decoder
     const AVClass *priv_class;              ///< AVClass for the private context
     const AVProfile *profiles;              ///< array of recognized profiles, or NULL if unknown, array is terminated by {FF_PROFILE_UNKNOWN}
@@ -3469,7 +3469,7 @@ typedef struct AVCodec {
      * New public fields should be added right above.
      *****************************************************************
      */
-    int priv_data_size;
+    int priv_data_size; //私有数据的大小
     struct AVCodec *next;
     /**
      * @name Frame-level threading support functions

@@ -237,7 +237,7 @@ typedef struct AVFrame {
      * NOTE: Except for hwaccel formats, pointers not needed by the format
      * MUST be set to NULL.
      */
-    uint8_t *data[AV_NUM_DATA_POINTERS];
+    uint8_t *data[AV_NUM_DATA_POINTERS];// 原始数据，RGB只有data[0], YUV则分别是data[0],data[1],data[2]
 
     /**
      * For video, size in bytes of each picture line.
@@ -254,7 +254,7 @@ typedef struct AVFrame {
      * @note The linesize may be larger than the size of usable data -- there
      * may be extra padding present for performance reasons.
      */
-    int linesize[AV_NUM_DATA_POINTERS];
+    int linesize[AV_NUM_DATA_POINTERS]; //data中“一行”数据的大小。注意：未必等于图像的宽，一般大于图像的宽。通常64倍数对齐
 
     /**
      * pointers to the data planes/channels.
@@ -281,7 +281,7 @@ typedef struct AVFrame {
      * restricted by the @ref cropping "Cropping rectangle".
      * @{
      */
-    int width, height;
+    int width, height;  //分辨率
     /**
      * @}
      */
@@ -289,24 +289,24 @@ typedef struct AVFrame {
     /**
      * number of audio samples (per channel) described by this frame
      */
-    int nb_samples;
+    int nb_samples; //音频的一个AVFrame中可能包含多个音频帧，在此标记包含了几个
 
     /**
      * format of the frame, -1 if unknown or unset
      * Values correspond to enum AVPixelFormat for video frames,
      * enum AVSampleFormat for audio)
      */
-    int format;
+    int format;     //解码后原始数据类型（YUV420，YUV422，RGB24...）
 
     /**
      * 1 -> keyframe, 0-> not
      */
-    int key_frame;
+    int key_frame; //是否是关键帧
 
     /**
      * Picture type of the frame.
      */
-    enum AVPictureType pict_type;
+    enum AVPictureType pict_type; //帧类型（I,B,P...）
 
     /**
      * Sample aspect ratio for the video frame, 0/1 if unknown/unspecified.
@@ -316,7 +316,7 @@ typedef struct AVFrame {
     /**
      * Presentation timestamp in time_base units (time when frame should be shown to user).
      */
-    int64_t pts;
+    int64_t pts;    // 时间戳
 
 #if FF_API_PKT_PTS
     /**
@@ -337,11 +337,11 @@ typedef struct AVFrame {
     /**
      * picture number in bitstream order
      */
-    int coded_picture_number;
+    int coded_picture_number;   //编码帧序号
     /**
      * picture number in display order
      */
-    int display_picture_number;
+    int display_picture_number; //显示帧序号
 
     /**
      * quality (between 1 (good) and FF_LAMBDA_MAX (bad))
@@ -370,7 +370,7 @@ typedef struct AVFrame {
     /**
      * The content of the picture is interlaced.
      */
-    int interlaced_frame;
+    int interlaced_frame;   //是否是隔行扫描,  隔行扫描有什么区别？
 
     /**
      * If the content is interlaced, is top field displayed first.
