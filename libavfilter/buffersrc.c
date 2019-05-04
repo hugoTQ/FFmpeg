@@ -50,8 +50,8 @@ typedef struct BufferSourceContext {
 
     /* video only */
     int               w, h;
-    enum AVPixelFormat  pix_fmt;
-    AVRational        pixel_aspect;
+    enum AVPixelFormat  pix_fmt;	//像素格式，例如：yuv420
+    AVRational        pixel_aspect;	//宽高比
     char              *sws_param;
 
     AVBufferRef *hw_frames_ctx;

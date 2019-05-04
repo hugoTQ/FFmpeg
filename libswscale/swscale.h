@@ -54,6 +54,7 @@ const char *swscale_configuration(void);
  */
 const char *swscale_license(void);
 
+//sws_scale来进行图像缩放和格式转换算法，会有复杂度和效果的区别
 /* values for the flags, the stuff on the command line is different */
 #define SWS_FAST_BILINEAR     1
 #define SWS_BILINEAR          2

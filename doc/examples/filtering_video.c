@@ -38,7 +38,7 @@
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
 
-const char *filter_descr = "scale=78:24,transpose=cclock";
+const char *filter_descr = "scale=78:24,transpose=cclock";// 转成78x24分辨率，并逆时针转90度
 /* other way:
    scale=78:24 [scl]; [scl] transpose=cclock // assumes "[in]" and "[out]" to be input output pads respectively
  */
@@ -61,13 +61,13 @@ static int open_input_file(const char *filename)
         return ret;
     }
 
-    if ((ret = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
+    if ((ret = avformat_find_stream_info(fmt_ctx, NULL)) < 0) { //读取packet初始化stream信息
         av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
         return ret;
     }
 
     /* select the video stream */
-    ret = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &dec, 0);
+    ret = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &dec, 0);	//返回视频stream index和对应解码器
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot find a video stream in the input file\n");
         return ret;
@@ -75,13 +75,13 @@ static int open_input_file(const char *filename)
     video_stream_index = ret;
 
     /* create decoding context */
-    dec_ctx = avcodec_alloc_context3(dec);
+    dec_ctx = avcodec_alloc_context3(dec);	// 根据AVCodec为AVCodecContext分配内存
     if (!dec_ctx)
         return AVERROR(ENOMEM);
-    avcodec_parameters_to_context(dec_ctx, fmt_ctx->streams[video_stream_index]->codecpar);
+    avcodec_parameters_to_context(dec_ctx, fmt_ctx->streams[video_stream_index]->codecpar);//解析器的参数拷贝到解码器上下文
 
     /* init the video decoder */
-    if ((ret = avcodec_open2(dec_ctx, dec, NULL)) < 0) {
+    if ((ret = avcodec_open2(dec_ctx, dec, NULL)) < 0) {	// 根据AVCodec初始化AVCodecContext
         av_log(NULL, AV_LOG_ERROR, "Cannot open video decoder\n");
         return ret;
     }
@@ -93,14 +93,14 @@ static int init_filters(const char *filters_descr)
 {
     char args[512];
     int ret = 0;
-    const AVFilter *buffersrc  = avfilter_get_by_name("buffer");
-    const AVFilter *buffersink = avfilter_get_by_name("buffersink");
+    const AVFilter *buffersrc  = avfilter_get_by_name("buffer");//获取 ff_vsrc_buffer，vsrc表示无输入fitler
+    const AVFilter *buffersink = avfilter_get_by_name("buffersink");//获取ff_vsink_buffer，vsink表示无输出filter
     AVFilterInOut *outputs = avfilter_inout_alloc();
     AVFilterInOut *inputs  = avfilter_inout_alloc();
     AVRational time_base = fmt_ctx->streams[video_stream_index]->time_base;
     enum AVPixelFormat pix_fmts[] = { AV_PIX_FMT_GRAY8, AV_PIX_FMT_NONE };
 
-    filter_graph = avfilter_graph_alloc();
+    filter_graph = avfilter_graph_alloc(); //为Filtergraph分配内存
     if (!outputs || !inputs || !filter_graph) {
         ret = AVERROR(ENOMEM);
         goto end;
@@ -112,9 +112,11 @@ static int init_filters(const char *filters_descr)
             dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
             time_base.num, time_base.den,
             dec_ctx->sample_aspect_ratio.num, dec_ctx->sample_aspect_ratio.den);
-
+	//1.由AVFilter初始化filtercontext 
+	//2.该context命名“in”，context中的具体参数由args赋值 
+	//3.添加到FilterGraph
     ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-                                       args, NULL, filter_graph);
+                                       args, NULL, filter_graph);	
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
         goto end;
@@ -127,7 +129,7 @@ static int init_filters(const char *filters_descr)
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
         goto end;
     }
-
+	// htq:？
     ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,
                               AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
     if (ret < 0) {
@@ -146,8 +148,8 @@ static int init_filters(const char *filters_descr)
      * filter input label is not specified, it is set to "in" by
      * default.
      */
-    outputs->name       = av_strdup("in");
-    outputs->filter_ctx = buffersrc_ctx;
+    outputs->name       = av_strdup("in"); // htq: outputs->name 为什么是in
+    outputs->filter_ctx = buffersrc_ctx; 
     outputs->pad_idx    = 0;
     outputs->next       = NULL;
 
@@ -163,10 +165,10 @@ static int init_filters(const char *filters_descr)
     inputs->next       = NULL;
 
     if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
-                                    &inputs, &outputs, NULL)) < 0)
+                                    &inputs, &outputs, NULL)) < 0)	//解析命令行输入的参数，初始化相关filter和filtergraph
         goto end;
 
-    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
+    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0) //htq: 检查FitlerGraph的配置？
         goto end;
 
 end:

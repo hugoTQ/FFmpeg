@@ -842,7 +842,7 @@ typedef struct AVFilterGraph {
     AVFilterContext **filters;
     unsigned nb_filters;
 
-    char *scale_sws_opts; ///< sws options to use for the auto-inserted scale filters
+    char *scale_sws_opts; ///< sws options to use for the auto-inserted scale filters //TODO-htq ?
 #if FF_API_LAVR_OPTS
     attribute_deprecated char *resample_lavr_opts;   ///< libavresample options to use for the auto-inserted resample filters
 #endif
@@ -859,7 +859,7 @@ typedef struct AVFilterGraph {
      * determining allowed threading types. I.e. a threading type needs to be
      * set in both to be allowed.
      */
-    int thread_type;
+    int thread_type;	//TODO-htq ?
 
     /**
      * Maximum number of threads used by filters in this graph. May be set by

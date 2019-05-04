@@ -177,7 +177,7 @@ AVFilterContext *avfilter_graph_alloc_filter(AVFilterGraph *graph,
         if (graph->execute) {
             graph->internal->thread_execute = graph->execute;
         } else {
-            int ret = ff_graph_thread_init(graph);
+            int ret = ff_graph_thread_init(graph);// TODO-htq 创建线程干嘛？
             if (ret < 0) {
                 av_log(graph, AV_LOG_ERROR, "Error initializing threading: %s.\n", av_err2str(ret));
                 return NULL;

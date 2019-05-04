@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         goto fail;
     }
 
-    if (!(streams = av_calloc(nb_streams, sizeof(*streams)))) {
+    if (!(streams = av_calloc(nb_streams, sizeof(*streams)))) {	//TODO 为所有输出流分配空间，streams是一个数组？
         ret = AVERROR(ENOMEM);
         av_log(NULL, AV_LOG_ERROR, "Could not allocate streams\n");
     }
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
         AVFilterContext *f = in_graph->filters[i];
         for (j = 0; j < f->nb_outputs; j++) {
             if (!f->outputs[j]) {
-                if ((ret = create_sink(st++, in_graph, f, j)) < 0)
+                if ((ret = create_sink(st++, in_graph, f, j)) < 0) //TODO 历filtergraph的filters，为每个filter的每个output创建sink
                     goto fail;
             }
         }

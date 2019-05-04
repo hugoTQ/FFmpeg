@@ -546,13 +546,13 @@ int avfilter_graph_parse_ptr(AVFilterGraph *graph, const char *filters,
     AVFilterInOut *open_inputs  = open_inputs_ptr  ? *open_inputs_ptr  : NULL;
     AVFilterInOut *open_outputs = open_outputs_ptr ? *open_outputs_ptr : NULL;
 
-    if ((ret = parse_sws_flags(&filters, graph)) < 0)
+    if ((ret = parse_sws_flags(&filters, graph)) < 0) // 自动插入scale fitler，用于缩放和图片格式转换
         goto end;
 
     do {
         AVFilterContext *filter;
         const char *filterchain = filters;
-        filters += strspn(filters, WHITESPACES);
+        filters += strspn(filters, WHITESPACES);// htq: 去掉输入命令的开头空白字符
 
         if ((ret = parse_inputs(&filters, &curr_inputs, &open_outputs, log_ctx)) < 0)
             goto end;
