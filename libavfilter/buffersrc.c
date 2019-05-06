@@ -240,7 +240,7 @@ static int av_buffersrc_add_frame_internal(AVFilterContext *ctx,
             return ret;
         }
     }
-
+	// 写到 FIFO
     if ((ret = av_fifo_generic_write(s->fifo, &copy, sizeof(copy), NULL)) < 0) {
         if (refcounted)
             av_frame_move_ref(frame, copy);

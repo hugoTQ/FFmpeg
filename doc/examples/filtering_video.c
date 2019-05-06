@@ -116,7 +116,7 @@ static int init_filters(const char *filters_descr)
 	//2.该context命名“in”，context中的具体参数由args赋值 
 	//3.添加到FilterGraph
     ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-                                       args, NULL, filter_graph);	
+                                       args, NULL, filter_graph);	//以agrs为参数初始化ff_vsrc_buffer的filtercontext，命名为in，加入到filergraph
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
         goto end;
@@ -124,13 +124,13 @@ static int init_filters(const char *filters_descr)
 
     /* buffer video sink: to terminate the filter chain. */
     ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-                                       NULL, NULL, filter_graph);
+                                       NULL, NULL, filter_graph); //初始化 ff_vsink_buffer 的filtercontext，命名out，加入到filergraph
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
         goto end;
     }
-	// htq:？
-    ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,
+	
+    ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,//设置 out 的参数
                               AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
     if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "Cannot set output pixel format\n");
@@ -148,7 +148,7 @@ static int init_filters(const char *filters_descr)
      * filter input label is not specified, it is set to "in" by
      * default.
      */
-    outputs->name       = av_strdup("in"); // htq: outputs->name 为什么是in
+    outputs->name       = av_strdup("in"); // buffersrc的output必须被连接到 第一个filter的input pad，若filters_descr没有指定，则缺省为in（一般是解码器）
     outputs->filter_ctx = buffersrc_ctx; 
     outputs->pad_idx    = 0;
     outputs->next       = NULL;
@@ -159,13 +159,13 @@ static int init_filters(const char *filters_descr)
      * filter output label is not specified, it is set to "out" by
      * default.
      */
-    inputs->name       = av_strdup("out");
+    inputs->name       = av_strdup("out"); // buffersink的input必须被连接到 最后一个filter的output pad，若filter_descr美欧指定，则缺省为out (一般是编码器)
     inputs->filter_ctx = buffersink_ctx;
     inputs->pad_idx    = 0;
     inputs->next       = NULL;
 
     if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
-                                    &inputs, &outputs, NULL)) < 0)	//解析命令行输入的参数，初始化相关filter和filtergraph
+                                    &inputs, &outputs, NULL)) < 0)	//解析命令行输入的参数，初始化相关filter和filtergraph，代读
         goto end;
 
     if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0) //htq: 检查FitlerGraph的配置？
@@ -235,18 +235,18 @@ int main(int argc, char **argv)
 
     /* read all packets */
     while (1) {
-        if ((ret = av_read_frame(fmt_ctx, &packet)) < 0)
+        if ((ret = av_read_frame(fmt_ctx, &packet)) < 0) // 获取一个AVPacket，包含一帧视频或者多帧音频
             break;
 
         if (packet.stream_index == video_stream_index) {
-            ret = avcodec_send_packet(dec_ctx, &packet);
+            ret = avcodec_send_packet(dec_ctx, &packet);	// 将一帧放入解码器，待解码
             if (ret < 0) {
                 av_log(NULL, AV_LOG_ERROR, "Error while sending a packet to the decoder\n");
                 break;
             }
 
             while (ret >= 0) {
-                ret = avcodec_receive_frame(dec_ctx, frame);
+                ret = avcodec_receive_frame(dec_ctx, frame);	// 解码一帧
                 if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                     break;
                 } else if (ret < 0) {
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
                 frame->pts = frame->best_effort_timestamp;
 
                 /* push the decoded frame into the filtergraph */
-                if (av_buffersrc_add_frame_flags(buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF) < 0) {
+                if (av_buffersrc_add_frame_flags(buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF) < 0) { // 一帧数据放到buffer source，其实也就是一个fifo 容量是一个AVFrame
                     av_log(NULL, AV_LOG_ERROR, "Error while feeding the filtergraph\n");
                     break;
                 }
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
                 while (1) {
                     ret = av_buffersink_get_frame(buffersink_ctx, filt_frame);
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-                        break;
+                        break; // 一帧经过所有filter处理完，跳出，解码下一帧
                     if (ret < 0)
                         goto end;
                     display_frame(filt_frame, buffersink_ctx->inputs[0]->time_base);

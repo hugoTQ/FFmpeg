@@ -299,8 +299,8 @@ static int parse_inputs(const char **buf, AVFilterInOut **curr_inputs,
     AVFilterInOut *parsed_inputs = NULL;
     int pad = 0;
 
-    while (**buf == '[') {
-        char *name = parse_link_name(buf, log_ctx);
+    while (**buf == '[') {// 找到第一个左
+        char *name = parse_link_name(buf, log_ctx);//解析中括号里面的字符串
         AVFilterInOut *match;
 
         if (!name)
@@ -537,22 +537,22 @@ int avfilter_graph_parse(AVFilterGraph *graph, const char *filters,
 
 int avfilter_graph_parse_ptr(AVFilterGraph *graph, const char *filters,
                          AVFilterInOut **open_inputs_ptr, AVFilterInOut **open_outputs_ptr,
-                         void *log_ctx)
+                         void *log_ctx) //filters就是命令行输入字符串
 {
     int index = 0, ret = 0;
     char chr = 0;
 
     AVFilterInOut *curr_inputs = NULL;
-    AVFilterInOut *open_inputs  = open_inputs_ptr  ? *open_inputs_ptr  : NULL;
-    AVFilterInOut *open_outputs = open_outputs_ptr ? *open_outputs_ptr : NULL;
+    AVFilterInOut *open_inputs  = open_inputs_ptr  ? *open_inputs_ptr  : NULL;//open_inputs是buffer sink
+    AVFilterInOut *open_outputs = open_outputs_ptr ? *open_outputs_ptr : NULL;//open_outputs是buffer source
 
     if ((ret = parse_sws_flags(&filters, graph)) < 0) // 自动插入scale fitler，用于缩放和图片格式转换
         goto end;
 
     do {
         AVFilterContext *filter;
-        const char *filterchain = filters;
-        filters += strspn(filters, WHITESPACES);// htq: 去掉输入命令的开头空白字符
+        const char *filterchain = filters;  
+        filters += strspn(filters, WHITESPACES);// 去掉开头空白字符
 
         if ((ret = parse_inputs(&filters, &curr_inputs, &open_outputs, log_ctx)) < 0)
             goto end;
